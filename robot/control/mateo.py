@@ -1,8 +1,10 @@
 import wpilib
+from networktables.entry import NetworkTableEntry
 from wpilib.interfaces.generichid import GenericHID
 import marsutils
 
 import components
+from networktables import NetworkTables
 
 
 class Mateo(marsutils.ControlInterface):
@@ -23,6 +25,10 @@ class Mateo(marsutils.ControlInterface):
     intake: components.intake.Intake
     grabber: components.grabber.Grabber
 
+    limelight_x: NetworkTableEntry
+    limelight_valid: NetworkTableEntry
+    dashboard_has_target: NetworkTableEntry
+
     def teleopPeriodic(self):
         forward_speed = self.gamepad.getTriggerAxis(GenericHID.Hand.kRight)
         reverse_speed = -self.gamepad.getTriggerAxis(GenericHID.Hand.kLeft)
@@ -32,7 +38,22 @@ class Mateo(marsutils.ControlInterface):
         if self.lift.get_setpoint() > 1500:
             total_speed *= 0.8
 
-        self.drive.drive(total_speed, -self.gamepad.getX(GenericHID.Hand.kLeft) * .75)
+        if self.limelight_valid.getNumber(0) == 0:
+            self.dashboard_has_target.setBoolean(False)
+        else:
+            self.dashboard_has_target.setBoolean(True)
+        auto = self.gamepad.getBButton()
+
+        if auto:
+            x = self.limelight_x.getNumber(0)
+            if x < -4:
+                self.drive.drive(0, .65)
+            if x > 4:
+                self.drive.drive(0, -.65)
+
+        # self.drive.drive(0, .65)
+        else:
+            self.drive.drive(total_speed, -self.gamepad.getX(GenericHID.Hand.kLeft) * .75)
 
         self.intake.set_speed(-self.gamepad_alt.getY(GenericHID.Hand.kRight))
         # self.intake.left_intake_motor.set(self.gamepad_alt.getRawAxis(0))

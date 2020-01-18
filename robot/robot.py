@@ -57,6 +57,7 @@ class Stanley(magicbot.MagicRobot):
         self.drive_train = wpilib.drive.DifferentialDrive(
             self.left_motor, self.right_motor
         )
+        self.drive_train.deadband = .04
 
         # Elevator encoder (gearbox)
         self.lift_encoder = ExternalEncoder(0, 1)
@@ -92,6 +93,10 @@ class Stanley(magicbot.MagicRobot):
         self.navx = navx.AHRS.create_spi()
 
         self.net_table = NetworkTables.getTable("SmartDashboard")
+        self.vision_table = NetworkTables.getTable("limelight")
+        self.limelight_x = self.vision_table.getEntry("tx")
+        self.limelight_valid = self.vision_table.getEntry("tv")
+        self.dashboard_has_target = self.vision_table.getEntry("hastarget")
 
         # Launch camera server
         wpilib.CameraServer.launch()
